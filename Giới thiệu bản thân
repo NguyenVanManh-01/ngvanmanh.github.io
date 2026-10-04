@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d19">
+  <title>Nguyễn Văn Mạnh — Hồ sơ cá nhân</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap&subset=vietnamese" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Roboto", Arial, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      --ink: #10131b;
+      --muted-ink: #202733;
+      --shell-radius: 24px;
+      --motion: 1200ms;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background:
+        radial-gradient(ellipse at 50% 45%, #202b45 0, #101626 38%, #090d19 78%);
+      color: #f8f9fc;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .ambient {
+      position: fixed;
+      inset: -8%;
+      display: grid;
+      overflow: hidden;
+      place-items: center;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-stack {
+      width: min(920px, 76vw);
+      height: min(660px, 76vh);
+      transform: scale(1.34);
+      filter: blur(18px) saturate(.8);
+      opacity: .28;
+    }
+
+    .ambient-stack .slide {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      height: 100%;
+      padding: 0;
+      scroll-snap-align: none;
+      transition: opacity 1s ease;
+    }
+
+    .ambient-stack .slide-frame {
+      height: min(660px, 76vh);
+      min-height: 0;
+      transform: scale(.96);
+      filter: blur(10px);
+      transition: transform 1s ease, filter 1s ease;
+    }
+
+    .ambient-stack .slide.is-active .slide-frame {
+      transform: scale(1);
+      filter: blur(0);
+    }
+
+    .ambient-stack .slide-content {
+      min-height: 0;
+      box-shadow: none;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      min-height: 100svh;
+    }
+
+    .topline {
+      position: fixed;
+      top: 22px;
+      left: 50%;
+      z-index: 5;
+      display: flex;
+      width: min(calc(100% - 48px), 900px);
+      align-items: center;
+      justify-content: space-between;
+      transform: translateX(-50%);
+      color: rgba(240, 244, 255, .7);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wordmark-mark {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d8e4ff;
+      box-shadow: 0 0 16px rgba(216, 228, 255, .8);
+    }
+
+    .keyboard-hint {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: none;
+    }
+
+    .deck {
+      width: 100%;
+    }
+
+    .slide-stack {
+      width: 100%;
+      isolation: isolate;
+      display: block;
+    }
+
+    .ambient .ambient-stack {
+      display: block;
+      width: min(920px, 76vw);
+      height: min(660px, 76vh);
+    }
+
+    .slide {
+      --frame: #3366cc;
+      --panel: #00ccff;
+      position: relative;
+      display: grid;
+      min-height: 100svh;
+      place-items: center;
+      padding: 82px 24px 92px;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .slide[data-theme="study"] {
+      --frame: #444444;
+      --panel: #888888;
+    }
+
+    .slide[data-theme="life"] {
+      --frame: #00ff00;
+      --panel: #66ff66;
+    }
+
+    .slide-frame {
+      position: relative;
+      width: min(900px, 100%);
+      height: min(680px, calc(100svh - 174px));
+      min-height: 430px;
+      overflow: hidden;
+      border-radius: var(--shell-radius);
+      padding: clamp(9px, 1.3vw, 13px);
+      background-color: var(--frame);
+      opacity: .72;
+      transform: translate3d(0, var(--push-offset, 22px), 0) scale(.985);
+      filter: blur(3px);
+      transition:
+        opacity 1s cubic-bezier(.22, .7, .22, 1),
+        transform 1s cubic-bezier(.22, .7, .22, 1),
+        filter 1s cubic-bezier(.22, .7, .22, 1),
+        background-color 1s ease;
+      will-change: opacity, transform, filter;
+    }
+
+    .slide[data-direction="up"] .slide-frame {
+      --push-offset: -22px;
+    }
+
+    .border-glint {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .border-glint::before,
+    .border-glint::after {
+      position: absolute;
+      top: -50px;
+      left: 0;
+      height: calc(100% + 100px);
+      background: linear-gradient(
+        90deg,
+        transparent 0,
+        rgba(255, 255, 255, .2) 32%,
+        rgba(255, 255, 255, .96) 50%,
+        rgba(255, 255, 255, .2) 68%,
+        transparent
+      );
+      animation: stripe-sweep 12s linear infinite;
+      content: "";
+    }
+
+    .border-glint::before {
+      width: 4cm;
+    }
+
+    .border-glint::after {
+      width: 1.5cm;
+      animation-delay: .45s;
+    }
+
+    .slide-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      flex-direction: column;
+      overflow: visible;
+      border-radius: calc(var(--shell-radius) - 9px);
+      padding: clamp(21px, 3.5vw, 38px);
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: inset 0 1px rgba(255, 255, 255, .5), 0 20px 70px rgba(0, 0, 0, .16);
+    }
+
+    .slide[data-theme="study"] .slide-content {
+      background: #888888;
+    }
+
+    .slide.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .slide.is-active .slide-frame {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0);
+    }
+
+    .ambient-stack .slide {
+      opacity: 0;
+      pointer-events: none;
+      transform: none;
+    }
+
+    .ambient-stack .slide.is-active {
+      opacity: 1;
+    }
+
+    .slide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .eyebrow,
+    .section-index {
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .section-index {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .12em;
+    }
+
+    .slide-title {
+      max-width: 680px;
+      margin: 30px 0 10px;
+      font-size: clamp(34px, 6vw, 62px);
+      font-weight: 700;
+      letter-spacing: -.055em;
+      line-height: 1.04;
+      overflow-wrap: anywhere;
+    }
+
+    .slide-subtitle {
+      max-width: 550px;
+      margin: 0;
+      color: var(--muted-ink);
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.65;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+      margin-top: 28px;
+      padding-top: 0;
+    }
+
+    .detail-card {
+      min-width: 0;
+      min-height: 110px;
+      border: 1px solid rgba(17, 30, 45, .15);
+      border-radius: 15px;
+      padding: 18px 20px;
+      background: rgba(255, 255, 255, .22);
+    }
+
+    .address-card {
+      grid-column: 1 / -1;
+    }
+
+    .detail-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--ink);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .detail-value {
+      display: block;
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-weight: 600;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .study-list {
+      display: grid;
+      gap: 10px;
+      margin: 26px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .study-item {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 15px;
+      align-items: start;
+      border-top: 1px solid rgba(16, 19, 27, .22);
+      padding-top: 15px;
+    }
+
+    .study-number {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      line-height: 1.6;
+    }
+
+    .study-item strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .study-item span:last-child {
+      display: block;
+      margin-top: 3px;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .interest-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 26px;
+      padding: 0 0 18px;
+    }
+
+    .interest-chip {
+      border: 1px solid rgba(16, 19, 27, .22);
+      border-radius: 999px;
+      padding: 11px 17px;
+      background: rgba(255, 255, 255, .23);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .achievement {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border-top: 1px solid rgba(16, 19, 27, .18);
+      padding-top: 19px;
+    }
+
+    .achievement-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .38);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .achievement p {
+      margin: 1px 0 0;
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.65;
+    }
+
+    .thanks {
+      margin: 22px 0 0;
+      padding-top: 20px;
+      color: rgba(16, 19, 27, .65);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      z-index: 5;
+      display: flex;
+      width: min(calc(100% - 48px), 900px);
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 0;
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: rgba(9, 13, 25, .78);
+      backdrop-filter: blur(14px);
+      transform: translateX(-50%);
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .progress-dot {
+      width: 7px;
+      height: 7px;
+      border: 0;
+      border-radius: 99px;
+      padding: 0;
+      background: rgba(255, 255, 255, .29);
+      cursor: pointer;
+      transition: width 300ms ease, background-color 300ms ease;
+    }
+
+    .progress-dot[aria-current="step"] {
+      width: 26px;
+      background: #f2f5ff;
+    }
+
+    .counter {
+      min-width: 54px;
+      color: rgba(240, 244, 255, .72);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .12em;
+      text-align: center;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-button {
+      display: inline-flex;
+      min-width: 104px;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 999px;
+      padding: 0 16px;
+      background: rgba(255, 255, 255, .07);
+      color: #f6f7fb;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+    }
+
+    .nav-button:hover:not(:disabled) {
+      border-color: rgba(255, 255, 255, .5);
+      background: rgba(255, 255, 255, .15);
+    }
+
+    .nav-button:focus-visible,
+    .progress-dot:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 4px;
+    }
+
+    .nav-button:disabled {
+      opacity: .38;
+      cursor: not-allowed;
+    }
+
+    .nav-arrow {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    @keyframes stripe-sweep {
+      0% { transform: translate3d(calc(-100% - 20px), 0, 0) rotate(-12deg); }
+      58% { transform: translate3d(calc(100vw + 100%), 0, 0) rotate(-12deg); }
+      100% { transform: translate3d(calc(100vw + 100%), 0, 0) rotate(-12deg); }
+    }
+
+    @media (max-width: 620px) {
+      .topline {
+        font-size: 9px;
+      }
+
+      .keyboard-hint {
+        display: none;
+      }
+
+      .slide {
+        padding: 72px 15px 100px;
+      }
+
+      .slide-frame {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+      }
+
+      .slide-content {
+        height: auto;
+        min-height: 0;
+        padding: 22px 18px;
+      }
+
+      .slide-title {
+        margin-top: 25px;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      .detail-card {
+        min-height: 0;
+        padding: 14px 16px;
+      }
+
+      .study-list {
+        margin-top: 20px;
+      }
+
+      .study-item {
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .controls {
+        flex-wrap: wrap;
+        bottom: 12px;
+        width: calc(100% - 30px);
+      }
+
+      .progress {
+        order: 1;
+      }
+
+      .counter {
+        order: 2;
+        margin-left: auto;
+        text-align: right;
+      }
+
+      .nav-buttons {
+        width: 100%;
+        order: 3;
+        justify-content: space-between;
+      }
+
+      .nav-button {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .ambient .ambient-stack {
+        width: 110vw;
+        height: 75svh;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .slide-header {
+        align-items: flex-start;
+      }
+
+      .eyebrow,
+      .section-index {
+        font-size: 9px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+
+      .ambient-stack {
+        filter: blur(10px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-stack slide-stack" id="ambientStack"></div>
+  </div>
+
+  <main class="page">
+    <header class="topline">
+      <div class="wordmark"><span class="wordmark-mark" aria-hidden="true"></span><span>Hồ sơ cá nhân</span></div>
+      <span class="keyboard-hint">Cuộn xuống để xem tiếp</span>
+    </header>
+
+    <nav class="controls" aria-label="Điều hướng các phần giới thiệu">
+      <div class="progress" aria-label="Chọn phần giới thiệu">
+        <button class="progress-dot" type="button" data-go="0" aria-label="Đến phần 1: Thông tin cá nhân" aria-current="step"></button>
+        <button class="progress-dot" type="button" data-go="1" aria-label="Đến phần 2: Học tập và chuyên môn"></button>
+        <button class="progress-dot" type="button" data-go="2" aria-label="Đến phần 3: Sở thích và thành tích"></button>
+      </div>
+      <span class="counter" id="slideCounter" aria-live="polite">01 / 03</span>
+      <div class="nav-buttons">
+        <button class="nav-button" id="previousButton" type="button" disabled>
+          <span class="nav-arrow" aria-hidden="true">↑</span><span>Trước</span>
+        </button>
+        <button class="nav-button" id="nextButton" type="button">
+          <span>Tiếp theo</span><span class="nav-arrow" aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </nav>
+
+    <section class="deck" aria-label="Giới thiệu bản thân">
+      <div class="slide-stack" id="slideStack">
+        <article class="slide is-active" data-theme="personal" aria-labelledby="title-personal">
+          <div class="slide-frame">
+            <span class="border-glint" aria-hidden="true"></span>
+            <div class="slide-content">
+              <div class="slide-header">
+                <span class="eyebrow">Thông tin cá nhân</span>
+                <span class="section-index">01 / 03</span>
+              </div>
+              <h1 class="slide-title" id="title-personal">Nguyễn Văn Mạnh</h1>
+              <p class="slide-subtitle">Một vài thông tin giới thiệu về bản thân.</p>
+              <div class="detail-grid">
+                <div class="detail-card">
+                  <span class="detail-label">Họ tên</span>
+                  <span class="detail-value">Nguyễn Văn Mạnh</span>
+                </div>
+                <div class="detail-card">
+                  <span class="detail-label">Ngày sinh</span>
+                  <span class="detail-value">14/03/2008</span>
+                </div>
+                <div class="detail-card address-card">
+                  <span class="detail-label">Địa chỉ</span>
+                  <span class="detail-value">275, Khánh Bình, Hưng Phú, Cần Thơ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" data-theme="study" aria-labelledby="title-study">
+          <div class="slide-frame">
+            <span class="border-glint" aria-hidden="true"></span>
+            <div class="slide-content">
+              <div class="slide-header">
+                <span class="eyebrow">Học tập và chuyên môn</span>
+                <span class="section-index">02 / 03</span>
+              </div>
+              <h2 class="slide-title" id="title-study">Đang trên hành trình học hỏi</h2>
+              <p class="slide-subtitle">Thông tin về quá trình học, lĩnh vực chuyên môn và kinh nghiệm.</p>
+              <ul class="study-list">
+                <li class="study-item">
+                  <span class="study-number">01</span>
+                  <div><strong>Quá trình học</strong><span>Sinh viên năm nhất Đại Học Cần Thơ</span></div>
+                </li>
+                <li class="study-item">
+                  <span class="study-number">02</span>
+                  <div><strong>Lĩnh vực chuyên môn</strong><span>Công nghệ thông tin</span></div>
+                </li>
+                <li class="study-item">
+                  <span class="study-number">03</span>
+                  <div><strong>Kinh nghiệm</strong><span>Sinh viên đang tích lũy kinh nghiệm</span></div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="slide" data-theme="life" aria-labelledby="title-life">
+          <div class="slide-frame">
+            <span class="border-glint" aria-hidden="true"></span>
+            <div class="slide-content">
+              <div class="slide-header">
+                <span class="eyebrow">Sở thích và thành tích</span>
+                <span class="section-index">03 / 03</span>
+              </div>
+              <h2 class="slide-title" id="title-life">Điều mình yêu thích</h2>
+              <p class="slide-subtitle">Những sở thích và dấu mốc học tập được chia sẻ trong hồ sơ.</p>
+              <div class="interest-row" aria-label="Sở thích">
+                <span class="interest-chip">Nghe nhạc</span>
+                <span class="interest-chip">Thể thao</span>
+              </div>
+              <div class="achievement">
+                <span class="achievement-mark" aria-hidden="true">✦</span>
+                <p>Nhiều năm liền học sinh giỏi/xuất sắc; Thi học sinh giỏi Tiếng anh, Tin học</p>
+              </div>
+              <p class="thanks">Cảm ơn bạn đã dành thời gian tìm hiểu về mình.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <p class="sr-only" id="slideAnnouncement" aria-live="polite"></p>
+  </main>
+
+  <script>
+    (() => {
+      const stack = document.getElementById("slideStack");
+      const ambientStack = document.getElementById("ambientStack");
+      const slides = Array.from(stack.querySelectorAll(".slide"));
+      const ambientSlides = slides.map((slide) => slide.cloneNode(true));
+      const dots = Array.from(document.querySelectorAll(".progress-dot"));
+      const previousButton = document.getElementById("previousButton");
+      const nextButton = document.getElementById("nextButton");
+      const counter = document.getElementById("slideCounter");
+      const announcement = document.getElementById("slideAnnouncement");
+      let current = 0;
+      let scrollFrame = 0;
+
+      ambientSlides.forEach((slide) => {
+        slide.removeAttribute("id");
+        slide.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+        slide.setAttribute("aria-hidden", "true");
+        ambientStack.appendChild(slide);
+      });
+
+      function setCurrent(index) {
+        if (index < 0 || index >= slides.length || index === current) return;
+        slides[index].dataset.direction = index > current ? "down" : "up";
+        current = index;
+        slides.forEach((slide, slideIndex) => {
+          slide.classList.toggle("is-active", slideIndex === current);
+        });
+        ambientSlides.forEach((slide, slideIndex) => {
+          slide.classList.toggle("is-active", slideIndex === current);
+        });
+        dots.forEach((dot, dotIndex) => {
+          if (dotIndex === current) dot.setAttribute("aria-current", "step");
+          else dot.removeAttribute("aria-current");
+        });
+
+        const number = String(current + 1).padStart(2, "0");
+        counter.textContent = `${number} / ${String(slides.length).padStart(2, "0")}`;
+        announcement.textContent = slides[current].querySelector(".eyebrow").textContent;
+        previousButton.disabled = current === 0;
+        nextButton.disabled = current === slides.length - 1;
+      }
+
+      function goToSlide(index) {
+        if (index < 0 || index >= slides.length) return;
+        slides[index].scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+          block: "start"
+        });
+      }
+
+      function updateFromScroll() {
+        if (scrollFrame) return;
+        scrollFrame = requestAnimationFrame(() => {
+          scrollFrame = 0;
+          const viewportCenter = window.innerHeight / 2;
+          const closestIndex = slides.reduce((closest, slide, index) => {
+            const bounds = slide.getBoundingClientRect();
+            const distance = Math.abs(bounds.top + bounds.height / 2 - viewportCenter);
+            return distance < closest.distance ? { index, distance } : closest;
+          }, { index: 0, distance: Infinity }).index;
+          setCurrent(closestIndex);
+        });
+      }
+
+      previousButton.addEventListener("click", () => goToSlide(current - 1));
+      nextButton.addEventListener("click", () => goToSlide(current + 1));
+      dots.forEach((dot) => dot.addEventListener("click", () => goToSlide(Number(dot.dataset.go))));
+      window.addEventListener("scroll", updateFromScroll, { passive: true });
+      window.addEventListener("resize", updateFromScroll);
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+      setCurrent(0);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+          event.preventDefault();
+          goToSlide(current + 1);
+        } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          goToSlide(current - 1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
